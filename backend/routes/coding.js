@@ -1,6 +1,6 @@
 const router = require('express').Router();
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 let Coding = require('../models/coding.model');
 
 router.route('/create_coding_block').post((req, res) => {
@@ -18,6 +18,24 @@ router.route('/create_coding_block').post((req, res) => {
     newUser.save()
         .then(() => res.json('User added!'))
         .catch(err => res.status(400).json('Error: ' + err));
+});
+
+router.route('/get_audio_file').get((req, res) => {
+    const filename = req.query.filename;
+    // generate file path
+    const filePath = path.resolve(__dirname, '../data/raw_audio/', filename);
+    // get file size info
+    const stat = fs.statSync(filePath);
+
+    // set response header info
+    res.writeHead(200, {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': stat.size
+    });
+    //create read stream
+    const readStream = fs.createReadStream(filePath);
+    // attach this stream with response stream
+    readStream.pipe(res);
 });
 
 router.route('/add_coded_file').post((req, res) => {
