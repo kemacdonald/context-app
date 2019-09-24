@@ -7,7 +7,13 @@ const CodedFile = new Schema({
 });
 
 const CodingBlock = new Schema({
-    username: String, 
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        minlength: 3
+    },
     coding_files: [CodedFile]
 });
 

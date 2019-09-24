@@ -1,32 +1,40 @@
 const router = require('express').Router();
+const path = require('path');
+const fs = require('fs');
 let Coding = require('../models/coding.model');
 
-// TODO: handle get request to pull coding information from db
-// router.route('/').get((req, res) => {
-//     Coding.find()
-//         .then(coding => res.json(coding))
-//         .catch(err => res.status(400).json('Error: ' + err));
-// });
+router.route('/create_coding_block').post((req, res) => {
+    const username = req.body.username; 
 
-router.route('/add').post((req, res) => {
+    // add coding block from disk
+    let rawdata = fs.readFileSync('data/coding_data.json');
+    let coding_block = JSON.parse(rawdata);
+    
+    const newUser = new Coding({ 
+        username: username,
+        coding_files: coding_block
+    });
+
+    newUser.save()
+        .then(() => res.json('User added!'))
+        .catch(err => res.status(400).json('Error: ' + err));
+});
+
+router.route('/add_coded_file').post((req, res) => {
     const username = req.body.username;
     const filename = req.body.filename
     const code = req.body.code;
+    const options = { upsert: false, new: true, setDefaultsOnInsert: true }
 
-    console.log(req.body)
-    const options = { upsert: true, new: true, setDefaultsOnInsert: true }
     Coding.findOneAndUpdate(
-        { username: username },
-        {$push: {
-                coding_files: {
-                    filename: filename,
-                    code: code
-                }
-            } 
+        { 'username': username, 'coding_files.filename': filename},
+        {"$set": {
+                "coding_files.$.code": code
+            }
         },
         options
     )
-        .then(() => res.json('Coding updated!'))
+        .then(() => res.json('Coding document updated!'))
         .catch(err => res.status(400).json('Error: ' + err));
 });
 
